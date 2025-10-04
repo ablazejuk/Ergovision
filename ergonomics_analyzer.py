@@ -2,9 +2,20 @@ import cv2
 import numpy as np
 import mediapipe as mp
 import os
-import time 
+import time
+from enum import Enum
 
 REBA_CALC_INTERVAL = 30
+
+class RebaRiskLevel(Enum):
+    """
+    Enum representing the REBA risk levels.
+    """
+    NEGLIGIBLE = "Negligible Risk"
+    LOW = "Low Risk"
+    MEDIUM = "Medium Risk"
+    HIGH = "High Risk"
+    VERY_HIGH = "Very High Risk"
 
 class ErgonomicsAnalyzer:
     """
@@ -61,18 +72,18 @@ class ErgonomicsAnalyzer:
             score (float): The REBA score.
 
         Returns:
-            str: Category of the REBA score.
+            RebaRiskLevel: Category of the REBA score.
         """
         if score <= 4:
-            return "Negligible Risk"
+            return RebaRiskLevel.NEGLIGIBLE
         elif 5 <= score <= 6:
-            return "Low Risk"
+            return RebaRiskLevel.LOW
         elif 7 <= score <= 8:
-            return "Medium Risk"
+            return RebaRiskLevel.MEDIUM
         elif 9 <= score <= 10:
-            return "High Risk"
+            return RebaRiskLevel.HIGH
         else:
-            return "Very High Risk"
+            return RebaRiskLevel.VERY_HIGH
 
     def calculate_reba_score(self, angles):
         """
@@ -219,14 +230,14 @@ class ErgonomicsAnalyzer:
                     if self.cycle_count % REBA_CALC_INTERVAL == 0:
                         reba_score = self.calculate_reba_score(current_angles)
                         category = self.categorize_reba_score(reba_score)
-                        print(f"{self.cycle_name}: Cycle {self.cycle_count}: REBA Score = {reba_score} ({category})")
+                        print(f"{self.cycle_name}: Cycle {self.cycle_count}: REBA Score = {reba_score} ({category.value})")
                 except IndexError as e:
                     print(f"Error: Unable to extract required landmarks: {e}")
 
                     # Check if the REBA score is high
                     if reba_score >= HIGH_REBA_THRESHOLD:
                         # Display warning text in bright red
-                        warning_text = f"High REBA Score Detected: {reba_score} ({category})"
+                        warning_text = f"High REBA Score Detected: {reba_score} ({category.value})"
                         cv2.putText(frame, warning_text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
                                     1, (0, 0, 255), 2, cv2.LINE_AA)
 
@@ -259,7 +270,7 @@ class ErgonomicsAnalyzer:
         if self.reba_scores:
             self.final_reba_score = round(np.mean(self.reba_scores), 2)
             category = self.categorize_reba_score(self.final_reba_score)
-            print(f"{self.cycle_name}: Final REBA Score = {self.final_reba_score} ({category})")
+            print(f"{self.cycle_name}: Final REBA Score = {self.final_reba_score} ({category.value})")
         else:
             print(f"{self.cycle_name}: No REBA scores calculated.")
 
